@@ -57,9 +57,15 @@ global_train_parser.add_argument(
     help='preprocessed data name')
 
 global_train_parser.add_argument(
+    '-data_dir',
+    type=str,
+    required=True,
+    help='preprocessed data directory')
+
+global_train_parser.add_argument(
     '-opt_type',
     default="ASGD",
-    choices=['SGD', 'ASGD'],
+    choices=['SGD', 'ASGD', 'AdamW'],
     help='optimizer (SGD or ASGD) (default: ASGD)')
 
 global_train_parser.add_argument(
@@ -84,3 +90,8 @@ global_train_parser.add_argument(
     default=0,
     type=int,
     help='random seed (default: 0)')
+
+global_train_parser.add_argument(
+    '-lr_finding',
+    action='store_true',
+    help='Use learning rate finder (default: disabled)')

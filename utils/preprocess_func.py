@@ -11,7 +11,8 @@ def Read_Corpus(file):
     for i in range(len(file)):
         lines = []
         for line in open(file[i]):
-            lines.append(line.strip('\n').split())
+            # lines.append(line.strip().split())
+            lines.append([word.strip() for word in line.strip().split()])
         lines_list.append(lines)
     return lines_list
 
@@ -253,22 +254,22 @@ class Preprocesser():
 
         self.dataset.train_data_size = max_sentence_num
 
-    def save_files(self, save_name, output_vocab):
+    def save_files(self, save_name, save_dir, output_vocab):
 
 
         print("saving files")
 
-        with open("data/" + save_name + ".data", mode='wb') as f:
+        with open(save_dir + save_name + ".data", mode='wb') as f:
             pickle.dump(self.dataset, f)
             f.close()
 
-        with open("data/" + save_name + ".vocab_dict", mode='wb') as f:
+        with open(save_dir + save_name + ".vocab_dict", mode='wb') as f:
             pickle.dump(self.vocab_dict, f)
             f.close()
 
         if (output_vocab):
             for lang in range(self.lang_size):
-                with open("data/" + save_name + ".vocab" + str(lang) + ".txt", "w") as f:
+                with open(save_dir + save_name + ".vocab" + str(lang) + ".txt", "w") as f:
                     for id in self.vocab_dict.id2vocab_input[lang].keys():
                         if self.vocab_dict.id2vocab_input[lang][id] not in ["<BOS_fwd>", "<BOS_bkw>", "<PAD>",'UNK']:
                             f.write((self.vocab_dict.id2vocab_input[lang][id]) + "\n")

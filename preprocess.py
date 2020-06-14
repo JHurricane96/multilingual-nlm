@@ -37,6 +37,13 @@ parser.add_argument(
     help='data name')
 
 parser.add_argument(
+    '-save_dir',
+    default="",
+    type=str,
+    required=True,
+    help='data directory')
+
+parser.add_argument(
     '-output_vocab',
     action='store_true',
     help='output vocabulary txt file'
@@ -52,11 +59,11 @@ opt = parser.parse_args()
 if __name__ == '__main__':
 
     train_corpus = Read_Corpus(opt.train)
-    if (not os.path.isdir('data')):
-        os.mkdir('data')
+    if (not os.path.isdir(opt.save_dir)):
+        os.mkdir(opt.save_dir)
 
-    with open("data/" + opt.save_name + "_inputs.txt", "w") as f:
-        f.write("save_name" + ": " + "data/" + opt.save_name + "\n")
+    with open(opt.save_dir + opt.save_name + "_inputs.txt", "w") as f:
+        f.write("save_name" + ": " + opt.save_dir + opt.save_name + "\n")
         for lang in range(len(opt.train)):
             f.write("train_files" + str(lang) + ": " + opt.train[lang] + "\n")
 
@@ -66,4 +73,4 @@ if __name__ == '__main__':
         = Preprocesser.load_corpus(train_corpus)
     Preprocesser.oversampling()
     Preprocesser.shuffle_train_data(opt.comparable)
-    Preprocesser.save_files(opt.save_name, opt.output_vocab)
+    Preprocesser.save_files(opt.save_name, opt.save_dir, opt.output_vocab)

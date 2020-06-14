@@ -26,7 +26,7 @@ if __name__ == '__main__':
     file_name = opt.save_dir + '/' + opt.data
     print("Save model as: ", file_name)
 
-    dataset, vocab_dict = load_data(opt.data)
+    dataset, vocab_dict = load_data(opt.data, opt.data_dir)
     dataset = Generate_MiniBatch(dataset, opt.batch_size)
     print("Number of mini-batches", len(dataset.batch_idx_list))
 
@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     model = Setup_model(model, opt.gpuid, vocab_dict)
 
-    trainer = Trainer(dataset, file_name)
+    trainer = Trainer(dataset, file_name, opt.lr_finding)
     trainer.set_optimiser(model, opt.opt_type, opt.learning_rate)
     bestmodel = trainer.main(model, opt.epoch_size, opt.stop_threshold, opt.remove_models)
 

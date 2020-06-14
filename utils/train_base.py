@@ -60,6 +60,9 @@ def PAD_Sentences(model, lengths, lines_id_input, lines_id_output, index):
 
 def check_options(opt):
     np.random.seed(opt.seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    torch.manual_seed(opt.seed)
     print("emb_size", opt.emb_size)
     print("hidden_size", opt.h_size)
     ######write option to a file######
@@ -88,11 +91,11 @@ def Setup_model(model, gpuid, vocab_dict):
 
     return model
 
-def load_data(data):
-    file = open("data/" + data + ".data", 'rb')
+def load_data(data, data_dir):
+    file = open(data_dir + data + ".data", 'rb')
     dataset = pickle.load(file)
 
-    file = open("data/" + data + ".vocab_dict", 'rb')
+    file = open(data_dir + data + ".vocab_dict", 'rb')
     vocab_dict = pickle.load(file)
 
     for i in range(dataset.lang_size):

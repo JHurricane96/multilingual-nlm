@@ -3,34 +3,47 @@
 
 import torch
 import torch.nn as nn
+from fastai.text.models import AWD_LSTM, RNNDropout
 
 class Shared_Langage_Model(nn.Module):
 
     def __init__(self, n_layer, emb_size, h_size, dr_rate, vocab_dict,*args):
         super().__init__()
 
+        Max_Word_idx = max(vocab_dict.id2vocab_input[-1].keys())+1 #[0,1,2,3], max = 3, idx_len = 3+1
+
         ####______shared params_______####
         self.dr_rate = dr_rate
-        self.Ws_share = nn.Linear(h_size, 1, bias=False) #W for EOS
-        self.lstm_fwd = nn.LSTM(
-            input_size=emb_size,
-            hidden_size=h_size,
-            num_layers=n_layer,
-            batch_first=True,
-            dropout=dr_rate
-)
-        self.lstm_bkw = nn.LSTM(
-            input_size=emb_size,
-            hidden_size=h_size,
-            num_layers=n_layer,
-            batch_first=True,
-            dropout=dr_rate
+        self.Ws_share = nn.Linear(emb_size, 1, bias=False) #W for EOS
+
+        self.rnn_fwd = AWD_LSTM(
+            vocab_sz=Max_Word_idx,
+            emb_sz=emb_size,
+            n_hid=h_size,
+            n_layers=n_layer,
+            hidden_p=dr_rate,
+            input_p=0,
+            embed_p=0,
+            weight_p=0,
+            qrnn=True
         )
-        self.dropout = nn.Dropout(p=dr_rate)
+
+        self.rnn_bkw = AWD_LSTM(
+            vocab_sz=Max_Word_idx,
+            emb_sz=emb_size,
+            n_hid=h_size,
+            n_layers=n_layer,
+            hidden_p=dr_rate,
+            input_p=0,
+            embed_p=0,
+            weight_p=0,
+            qrnn=True
+        )
+
+        self.dropout = RNNDropout(p=dr_rate)
         ####______shared params_______####
 
         ####______specific params_______####
-        Max_Word_idx = max(vocab_dict.id2vocab_input[-1].keys())+1 #[0,1,2,3], max = 3, idx_len = 3+1
         self.emb = nn.Embedding(Max_Word_idx, emb_size, padding_idx= vocab_dict.vocab2id_input[0]["<PAD>"]) #lookup table for all languages
         layer = []
         for lang in range(len(vocab_dict.id2vocab_output)):
@@ -49,10 +62,10 @@ class Shared_Langage_Model(nn.Module):
 
     def Switch_fwdbkw(self,type):
         if (type == "fwd"):
-            self.lstm = self.lstm_fwd
+            self.rnn = self.rnn_fwd
 
         elif (type == "bkw"):
-            self.lstm = self.lstm_bkw
+            self.rnn = self.rnn_bkw
 
         else:
             raise Exception("Invalid type")
@@ -67,8 +80,8 @@ class Shared_Langage_Model(nn.Module):
 
     def decode(self, input_id, input_id_len, *args):
         input_id_emb = self.emb(input_id)  #bs, max_s_len, * emb_size
-        ht, (h_last, c_last) = self.lstm(input_id_emb)  # ht: bt * len_t * demb(最上位層の出力 from each hidden state)
-        return  ht
+        ht, _ = self.rnn(input_id_emb, from_embeddings=True)  # ht: bt * len_t * demb(最上位層の出力 from each hidden state)
+        return  ht[-1]
 
     def set_device(self,is_cuda):
         if is_cuda:
